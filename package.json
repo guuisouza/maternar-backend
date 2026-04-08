@@ -1,7 +1,7 @@
 {
-  "name": "gestasus-backend",
+  "name": "maternar-backend",
   "version": "0.0.1",
-  "description": "Repositório back-end do GestaSUS para o projeto interdisciplinar do 6º semestre do curso Desenvolvimento de Software Multiplataforma",
+  "description": "Repositório back-end do Maternar para o projeto interdisciplinar do 6º semestre do curso Desenvolvimento de Software Multiplataforma",
   "author": "Gabriel Araujo, Guilherme Dilio de Souza e Sheila Alves",
   "private": true,
   "license": "UNLICENSED",
