@@ -29,3 +29,10 @@ export class UserDto {
   @IsDateString()
   birthDate: Date;
 }
+
+export interface UserProfileDto {
+  id: string;
+  name: string;
+  email: string;
+  birthDate: Date;
+}
