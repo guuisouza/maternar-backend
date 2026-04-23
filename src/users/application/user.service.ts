@@ -5,9 +5,15 @@ import * as bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
 import { ApiException } from '../../common/api-exception';
 
+import { ViaCepService } from '../../integrations/viacep/viacep.service';
+import { ViaCepResponse } from '../../integrations/viacep/interfaces/IViaCepAdressProvider';
+
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: DatabaseService) {}
+  constructor(
+    private readonly prisma: DatabaseService,
+    private readonly viaCepService: ViaCepService,
+  ) {}
 
   async create(newUser: UserDto) {
     const userEmailAlreadyExists = await this.prisma.user.findFirst({
@@ -20,6 +26,23 @@ export class UserService {
       throw new ConflictException('Email already registered');
     }
 
+    const cleanZipCode = newUser.zipCode.replace(/\D/g, '');
+
+    let viaCepData: ViaCepResponse | null = null;
+    try {
+      viaCepData = await this.viaCepService.getAddressByZipCode(cleanZipCode);
+    } catch (error) {
+      // Se o erro for BAD_REQUEST (CEP inválido/inexistente), repassa o erro e bloqueia o cadastro.
+      // Se for SERVICE_UNAVAILABLE (API fora do ar ou timeout), engole o erro e deixa o cadastro seguir.
+      if (
+        error instanceof ApiException &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+        error.getStatus() === HttpStatus.BAD_REQUEST
+      ) {
+        throw error;
+      }
+    }
+
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(newUser.password, salt);
 
@@ -28,7 +51,20 @@ export class UserService {
         name: newUser.name,
         email: newUser.email,
         password: hashedPassword,
+        zipCode: cleanZipCode,
         birthDate: new Date(newUser.birthDate),
+        // Prisma Nested Write: O Prisma cria a localização e o usuário na MESMA transação no banco de dados.
+        // Feito exclusivamente para não ocorrer falhas parciais.
+        ...(viaCepData && {
+          location: {
+            create: {
+              city: viaCepData.localidade,
+              uf: viaCepData.uf,
+              region: viaCepData.regiao,
+              ibgeCode: viaCepData.ibge,
+            },
+          },
+        }),
       },
     });
 

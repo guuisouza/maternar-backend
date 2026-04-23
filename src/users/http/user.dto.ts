@@ -26,6 +26,10 @@ export class UserDto {
   password: string;
 
   @IsNotEmpty()
+  @IsString()
+  zipCode: string;
+
+  @IsNotEmpty()
   @IsDateString()
   birthDate: Date;
 }
@@ -34,5 +38,6 @@ export interface UserProfileDto {
   id: string;
   name: string;
   email: string;
+  zipCode: string;
   birthDate: Date;
 }
