@@ -43,4 +43,11 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    rules: {
+      // Allow tests to have unbound methods
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
 );
